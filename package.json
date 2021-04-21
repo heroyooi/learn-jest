@@ -1,0 +1,22 @@
+{
+  "name": "learn-jest",
+  "version": "1.0.0",
+  "description": "```command\r npm init\r npm i jest -D\r ```",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heroyooi/learn-jest.git"
+  },
+  "author": "Heroyooi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/heroyooi/learn-jest/issues"
+  },
+  "homepage": "https://github.com/heroyooi/learn-jest#readme",
+  "devDependencies": {
+    "jest": "^26.6.3"
+  }
+}
