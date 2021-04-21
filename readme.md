@@ -7,7 +7,7 @@ npm i jest -D
 
 - npm test 명령어를 실행하면 프로젝트 내에 모든 test 파일들을 찾아서 테스트 한다.(test, \_\_test\_\_)
 
-## Simple Test
+## 유용한 Matchers
 
 - fn.js
 
@@ -118,7 +118,7 @@ test("이거 에러 나나요?", () => {
 
 ### 콜백 패턴
 
-#### SUCCESS 예제
+#### 성공 예제
 
 - fn.js
 
@@ -148,7 +148,7 @@ test("3초 후에 받아온 이름은 Mike", (done) => {
 });
 ```
 
-#### FAILURE 예제
+#### 실패 예제
 
 - fn.js
 
@@ -178,5 +178,95 @@ test("3초 후에 받아온 이름은 Mike", (done) => {
     }
   }
   fn.getName(callback);
+});
+```
+
+### Promise 패턴
+
+#### 성공 예제
+
+- fn.js
+
+```js
+const fn = {
+  getAge: (callback) => {
+    const age = 30;
+    return new Promise((res, rej) => {
+      setTimeout(() => {
+        res(age);
+      }, 3000);
+    });
+  },
+};
+
+module.exports;
+```
+
+- fn.test.js
+
+```js
+// O, 3초 후 성공
+test("3초 후에 받아온 나이는 30", () => {
+  // return fn.getAge().then((age) => {
+  //   expect(age).toBe(30);
+  // });
+  return expect(fn.getAge()).resolves.toBe(30);
+});
+```
+
+- Promise는 return을 꼭 해줘야 제대로 테스트가 된다.
+- resolves 매쳐로도 테스트가 가능하다.
+
+#### 실패 예제
+
+- fn.js
+
+```js
+const fn = {
+  getAge: (callback) => {
+    const age = 30;
+    return new Promise((res, rej) => {
+      setTimeout(() => {
+        rej("error");
+      }, 3000);
+    });
+  },
+};
+
+module.exports;
+```
+
+- fn.test.js
+
+```js
+// X, 3초 후 실패
+test("3초 후에 받아온 나이는 30", () => {
+  return expect(fn.getAge()).rejects.toBe(30);
+});
+
+// O, 에러 메세지가 동일한 지 테스트
+test("3초 후에 에러가 납니다.", () => {
+  return expect(fn.getAge()).rejects.toMatch("error");
+});
+```
+
+### async, await 패턴
+
+#### 성공 예제
+
+- fn.test.js
+
+```js
+// O, 3초 후 성공
+test("3초 후 나이 30", async () => {
+  const age = await fn.getAge();
+  expect(age).toBe(30);
+});
+```
+
+```js
+// O, 3초 후 성공
+test("3초 후 나이 30", async () => {
+  await expect(fn.getAge()).resolves.toBe(30);
 });
 ```
