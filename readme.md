@@ -133,7 +133,7 @@ const fn = {
   },
 };
 
-module.exports;
+module.exports = fn;
 ```
 
 - fn.test.js
@@ -162,7 +162,7 @@ const fn = {
   },
 };
 
-module.exports;
+module.exports = fn;
 ```
 
 - fn.test.js
@@ -200,7 +200,7 @@ const fn = {
   },
 };
 
-module.exports;
+module.exports = fn;
 ```
 
 - fn.test.js
@@ -234,7 +234,7 @@ const fn = {
   },
 };
 
-module.exports;
+module.exports = fn;
 ```
 
 - fn.test.js
