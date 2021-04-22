@@ -413,6 +413,264 @@ test("0 더하기 3 은 3", () => {
 - test.only는 나머지는 건너뛰고 해당 테스트만 실행
 - test.skip은 해당 테스트는 건너뜀
 
-## 강좌
+## Mock Functions
 
-[듣던 강좌](https://www.youtube.com/watch?v=9xBjErtlr1o&list=PLZKTXPmaJk8L1xCg_1cRjL5huINlP2JKt&index=5)
+- mock function: 테스트 하기 위해 흉내만 내는 함수
+
+- fn.test.js
+
+```js
+const mockFn = jest.fn();
+
+mockFn();
+mockFn(1);
+
+// O
+test("함수는 2번 호출됩니다.", () => {
+  expect(mockFn.mock.calls.length).toBe(2);
+});
+
+// O
+test("2번째로 호출된 함수에 전달된 첫번째 인수는 1 입니다.", () => {
+  expect(mockFn.mock.calls[1][0]).toBe(1);
+});
+```
+
+```js
+const mockFn = jest.fn();
+
+function forEachAdd1(arr) {
+  arr.forEach((num) => {
+    mockFn(num + 1);
+  });
+}
+
+forEachAdd1([10, 20, 30]);
+
+// O
+test("함수 호출은 3번 됩니다", () => {
+  expect(mockFn.mock.calls.length).toBe(3);
+});
+
+// O
+test("전달된 값은 11, 21, 31 입니다.", () => {
+  expect(mockFn.mock.calls[0][0]).toBe(11);
+  expect(mockFn.mock.calls[1][0]).toBe(21);
+  expect(mockFn.mock.calls[2][0]).toBe(31);
+});
+```
+
+```js
+const mockFn = jest.fn((num) => num + 1);
+
+mockFn(10);
+mockFn(20);
+mockFn(30);
+
+// O
+test("함수 호출은 3번 됩니다", () => {
+  console.log(mockFn.mock.results);
+  // console.log
+  //   [
+  //     { type: 'return', value: 11 },
+  //     { type: 'return', value: 21 },
+  //     { type: 'return', value: 31 }
+  //   ]
+  expect(mockFn.mock.calls.length).toBe(3);
+});
+```
+
+```js
+const mockFn = jest.fn((num) => num + 1);
+
+mockFn
+  .mockReturnValueOnce(10)
+  .mockReturnValueOnce(20)
+  .mockReturnValueOnce(30)
+  .mockReturnValue(40);
+
+mockFn();
+mockFn();
+mockFn();
+mockFn();
+
+test("dd", () => {
+  console.log(mockFn.mock.results);
+  // console.log
+  //   [
+  //     { type: 'return', value: 10 },
+  //     { type: 'return', value: 20 },
+  //     { type: 'return', value: 30 },
+  //     { type: 'return', value: 40 }
+  //   ]
+  expect("dd").toBe("dd");
+});
+```
+
+```js
+const mockFn = jest.fn();
+
+mockFn
+  .mockReturnValueOnce(true)
+  .mockReturnValueOnce(false)
+  .mockReturnValueOnce(true)
+  .mockReturnValueOnce(false)
+  .mockReturnValue(true);
+
+const result = [1, 2, 3, 4, 5].filter((num) => mockFn(num));
+
+// O
+test("홀수는 1,3,5", () => {
+  expect(result).toStrictEqual([1, 3, 5]);
+});
+```
+
+- 비동기 함수를 테스트할 수도 있다.
+
+```js
+const mockFn = jest.fn();
+
+mockFn.mockResolvedValue({ name: "Mike" });
+
+test("받아온 이름은 Mike", () => {
+  mockFn().then((res) => {
+    expect(res.name).toBe("Mike");
+  });
+});
+```
+
+- 실제로 유저를 생성하는 함수를 유저를 생성하지 않으면서 테스트
+
+- fn.js
+
+```js
+const fn = {
+  createUser: (name) => {
+    console.log("실제로 사용자가 생성되었습니다.");
+    return {
+      name,
+    };
+  },
+};
+
+module.exports = fn;
+```
+
+- fn.test.js
+
+```js
+const fn = require("./fn");
+
+// 아래 두 줄을 넣지 않으면 실제로 사용자가 생성 되버린다.
+jest.mock("./fn");
+fn.createUser.mockReturnValue({ name: "Mike" });
+
+// O
+test("유저를 만든다", () => {
+  const user = fn.createUser("Mike");
+  expect(user.name).toBe("Mike");
+});
+```
+
+- 기타 유용한 함수들
+
+```js
+const mockFn = jest.fn();
+
+mockFn(10, 20);
+mockFn();
+mockFn(30, 40);
+
+// O
+test("한번 이상 호출?", () => {
+  expect(mockFn).toBeCalled(); // 한 번이라도 호출됐으면 통과
+});
+
+// O
+test("정확히 세번 호출?", () => {
+  expect(mockFn).toBeCalledTimes(3); // 정확한 호출 횟수
+});
+
+// O
+test("10이랑 20 전달받은 함수가 있는가?", () => {
+  expect(mockFn).toBeCalledWith(10, 20); // 인수로 어떤 값을 받았는지 체크
+});
+
+// O
+test("마지막 함수는 30이랑 40 받았음?", () => {
+  expect(mockFn).lastCalledWith(30, 40); // 인수를 체크하는데 마지막으로 실행된 함수만 체크
+});
+```
+
+## 리액트 컴포넌트 + 스냅샷 테스트
+
+### 예제 Hello
+
+- Hello.js
+
+```js
+import React from "react";
+
+function Hello({ user }) {
+  return user?.name ? <div>Hello! {user.name}</div> : <button>Login</button>;
+}
+
+export default Hello;
+```
+
+- Hello.test.js
+
+```js
+import { render, screen } from "@testing-library/react";
+import Hello from "./Hello";
+
+const user = {
+  name: "Tom",
+  age: 30,
+};
+
+const user2 = {
+  age: 20,
+};
+
+test("snapshot : name 있음", () => {
+  const el = render(<Hello user={user} />);
+  expect(el).toMatchSnapshot();
+});
+
+test("snapshot : name 없음", () => {
+  const el = render(<Hello user={user2} />);
+  expect(el).toMatchSnapshot();
+});
+
+test("Hello 라는 글자가 포함되는가?", () => {
+  render(<Hello user={user} />);
+  const helloEl = screen.getByText(/Hello/i);
+  expect(helloEl).toBeInTheDocument();
+});
+```
+
+### 예제 Timer
+
+- Timer.js
+
+```js
+export default function Timer() {
+  const now = Date.now();
+  const sec = new Date(now).getSeconds();
+  return <p>현재 {sec}초 입니다.</p>;
+}
+```
+
+- Timer.test.js
+
+```js
+import { render, screen } from "@testing-library/react";
+import Timer from "./Timer";
+
+test("초 표시", () => {
+  Date.now = jest.fn(() => 123456789);
+  const el = render(<Timer />);
+  expect(el).toMatchSnapshot();
+});
+```
